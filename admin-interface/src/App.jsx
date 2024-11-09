@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import reactLogo from './assets/react.svg';
-import viteLogo from '/vite.svg';
 import './App.css';
-import Dashboard from './Dashboard';
+import AdminDashboard from './AdminDashboard';
+import './AdminDashboard'
 import { addTrip, getTrips, updateTrip, deleteTrip } from './firestoreOperations'; // Ensure the path is correct
 
 function App() {
@@ -52,7 +51,7 @@ function App() {
 
   return (
     <>
-      <Dashboard />
+      <AdminDashboard />
       <div>
         <h1>CompCab Admin Interface</h1>
         <button onClick={handleAddTrip}>Add Trip</button>
