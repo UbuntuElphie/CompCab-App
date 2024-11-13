@@ -51,9 +51,8 @@ const Clients = () => {
   };
 
   const handleEditPassengerOpen = (client, passenger) => {
-    // Check if passenger id is defined and navigate to the correct route
-    if (passenger.id) {
-      navigate(`/clients/${client.id}/edit-passenger/${passenger.id}`);
+    if (passenger && passenger.passengerID) {
+      navigate(`/clients/${client.id}/edit-passenger/${passenger.passengerID}`);
     } else {
       console.error("Passenger ID is undefined");
     }
@@ -80,6 +79,7 @@ const Clients = () => {
     setSelectedPassenger(null);
     fetchClients(); // Refresh client list after closing
   };
+
   return (
     <Box className="container">
       <Typography variant="h4" gutterBottom style={{ color: 'black' }}>

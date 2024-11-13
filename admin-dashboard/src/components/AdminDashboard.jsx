@@ -80,7 +80,7 @@ const AdminDashboard = () => {
               <Route path="/trip-execution" element={<TripExecution />} />
               <Route path="/billing-reporting" element={<BillingReporting />} />
               <Route path="/add-passenger" element={<AddPassenger clientId="clientId_placeholder" />} /> {/* AddPassenger Page */}
-              <Route path="/clients/:clientId/edit-passenger/:passengerId" element={<EditPassenger />} /> {/* EditPassenger Page */}
+              <Route path="/edit-passenger/:passengerId" element={<EditPassenger />} /> {/* EditPassenger Page */}
             </Routes>
           </Container>
         </Box>

@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Button, TextField, MenuItem, Typography, FormControl, Select, InputLabel } from '@mui/material';
 import { db } from '../firebaseConfig';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { useNavigate, useParams } from 'react-router-dom'; // Import useNavigate and useParams
-import MapPicker from './MapPicker'; // Import the MapPicker component
+import { useNavigate, useParams } from 'react-router-dom';
+import MapPicker from './MapPicker';
 
 const EditPassenger = () => {
-  const { clientId, passengerId } = useParams(); // Get clientId and passengerId from URL params
-  const [passengerType, setPassengerType] = useState('');
+  const { passengerId } = useParams(); // Get the passengerId from the route parameters
+  const formRef = useRef(null);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -24,44 +24,37 @@ const EditPassenger = () => {
     dateOfBirth: '',
     schoolName: '',
     schoolAddress: '',
-    pickupAddress: null, // Add pickupAddress field
+    pickupAddress: null,
   });
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPassengerData = async () => {
-      const clientRef = doc(db, 'accountHolders', clientId);
-      const clientSnap = await getDoc(clientRef);
-      if (clientSnap.exists()) {
-        const passengers = clientSnap.data().passengers || [];
-        const passenger = passengers.find((p) => p.id === passengerId);
-        if (passenger) {
-          setPassengerType(passenger.type);
-          setFormData(passenger);
+      try {
+        const passengerDoc = await getDoc(doc(db, 'accountHolders', passengerId));
+        if (passengerDoc.exists()) {
+          setFormData(passengerDoc.data());
+        } else {
+          console.error("Passenger not found");
         }
-      } else {
-        console.error("No such document!");
+      } catch (error) {
+        console.error("Error fetching passenger data:", error);
       }
     };
+
     fetchPassengerData();
-  }, [clientId, passengerId]);
+  }, [passengerId]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
   const handleSave = async () => {
     try {
-      const clientRef = doc(db, 'accountHolders', clientId);
-      const clientSnap = await getDoc(clientRef);
-      if (clientSnap.exists()) {
-        const passengers = clientSnap.data().passengers || [];
-        const updatedPassengers = passengers.map((p) =>
-          p.id === passengerId ? { ...formData, type: passengerType } : p
-        );
-        await updateDoc(clientRef, { passengers: updatedPassengers });
-        alert("Passenger updated successfully!");
-        navigate('/clients');
-      }
+      const passengerRef = doc(db, 'accountHolders', passengerId);
+      await updateDoc(passengerRef, formData);
+      alert("Passenger updated successfully!");
+      navigate('/clients');
     } catch (error) {
       console.error("Error updating passenger:", error);
       alert("Failed to update passenger. Please try again.");
@@ -69,7 +62,7 @@ const EditPassenger = () => {
   };
 
   const handleAddressSelect = (address) => {
-    console.log("Address selected:", address); // Debug log
+    console.log("Address selected:", address);
     setFormData((prevFormData) => ({
       ...prevFormData,
       pickupAddress: address,
@@ -77,14 +70,14 @@ const EditPassenger = () => {
   };
 
   return (
-    <Box sx={{ padding: 3, maxHeight: '80vh', overflowY: 'auto' }}>
+    <Box sx={{ padding: 3, maxHeight: '80vh', overflowY: 'auto' }} ref={formRef}>
       <Typography variant="h6" gutterBottom>Edit Passenger</Typography>
       <FormControl fullWidth margin="normal">
         <InputLabel id="passenger-type-label">Passenger Type</InputLabel>
         <Select
           labelId="passenger-type-label"
-          value={passengerType}
-          onChange={(e) => setPassengerType(e.target.value)}
+          value={formData.type}
+          onChange={(e) => setFormData({ ...formData, type: e.target.value })}
         >
           <MenuItem value="Adult">Adult</MenuItem>
           <MenuItem value="Child">Child</MenuItem>
@@ -130,7 +123,7 @@ const EditPassenger = () => {
         fullWidth
         margin="normal"
       />
-      {passengerType === 'Adult' && (
+      {formData.type === 'Adult' && (
         <>
           <TextField
             label="Relation to Account Holder"
@@ -150,7 +143,7 @@ const EditPassenger = () => {
           />
         </>
       )}
-      {passengerType === 'Child' && (
+      {formData.type === 'Child' && (
         <>
           <TextField
             label="Relation to Account Holder"
@@ -187,7 +180,7 @@ const EditPassenger = () => {
         </>
       )}
       <Typography variant="h6" gutterBottom>Pick-up Address</Typography>
-      <MapPicker onSelect={handleAddressSelect} /> {/* Include the MapPicker component */}
+      <MapPicker onSelect={handleAddressSelect} />
       <TextField
         label="Additional Comments/Specific Requests"
         name="comments"
