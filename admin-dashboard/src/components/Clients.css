@@ -1,0 +1,73 @@
+/* Clients.css */
+
+/* Main container styling */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start; /* Align items to the top */
+    margin-top: 20px; /* Adjust this value to position the div closer to the top */
+    padding: 20px; /* Add some padding for a clean look */
+    width: 100%; /* Ensure it stretches to the full width */
+    max-width: 800px; /* Set a maximum width for better readability */
+  }
+  
+  /* Style the Paper component in the modals for consistency */
+  .modal-paper {
+    padding: 16px; 
+    margin: auto; 
+    max-width: 600px; 
+    margin-top: 20px;
+  }
+  
+  /* Client list item styling for better spacing and alignment */
+  .client-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0px; /* Remove space between client and passenger */
+    padding: 10px; /* Add padding inside the items */
+    background-color: #f5f5f5; /* Add a background color for better visibility */
+    border-radius: 8px; /* Rounded corners for a clean look */
+    width: 100%; /* Ensure it stretches to the full width of the container */
+  }
+  
+  /* Ensure text does not overlap with icons */
+  .client-list-item-text {
+    flex-grow: 1;
+    margin-right: 16px; /* Space between text and icons */
+  }
+  
+  /* Styling for the icons to ensure proper spacing */
+  .client-list-item-icons {
+    display: flex;
+    justify-content: flex-end; /* Align icons to the right */
+    gap: 8px; /* Space between icons */
+  }
+  
+  /* Passenger list item styling for better spacing and alignment */
+  .passenger-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px; /* Add padding inside the items */
+    background-color: #e0e0e0; /* Add a background color for better visibility */
+    border-radius: 8px; /* Rounded corners for a clean look */
+    margin-left: 20px; /* Indent passengers to show hierarchy */
+    width: calc(100% - 100px); /* Further reduce the width of the div */
+    margin-top: -10px; /* Further reduce the margin to remove space between client and passenger */
+  }
+  
+  /* Ensure text does not overlap with icons */
+  .passenger-list-item-text {
+    flex-grow: 1;
+    margin-right: 16px; /* Space between text and icons */
+  }
+  
+  /* Styling for the icons to ensure proper spacing */
+  .passenger-list-item-icons {
+    display: flex;
+    justify-content: flex-end; /* Align icons to the right */
+    gap: 8px; /* Space between icons */
+  }
+  
