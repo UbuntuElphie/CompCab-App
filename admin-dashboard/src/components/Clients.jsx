@@ -85,7 +85,7 @@ const Clients = () => {
       <Typography variant="h4" gutterBottom style={{ color: 'black' }}>
         Clients
       </Typography>
-      <Button variant="contained" color="primary" sx={{ mb: 2 }} onClick={() => {/* Function to add a new client */}}>
+      <Button variant="contained" color="primary" sx={{ mb: 2 }} onClick={() => navigate('/client-onboarding')} >
         Add New Client
       </Button>
       {showEditClient && selectedClient ? (
