@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Box, Button, TextField, MenuItem, Typography, FormControl, Select, InputLabel } from '@mui/material';
+import React, { useState, useRef } from 'react';
+import { Box, Button, TextField, MenuItem, Typography, FormControl, Select, InputLabel, FormControlLabel, RadioGroup, FormLabel, Radio } from '@mui/material';
 import { db } from '../firebaseConfig';
 import { doc, updateDoc, arrayUnion, getDocs, collection, query, where } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import MapPicker from './MapPicker';
+import SchoolAddressAutocomplete from './SchoolAddressAutocomplete';
 
 const AddPassenger = ({ clientId }) => {
   const [passengerType, setPassengerType] = useState('');
@@ -25,8 +26,21 @@ const AddPassenger = ({ clientId }) => {
     schoolName: '',
     schoolAddress: '',
     pickupAddress: null,
+    pickupAddressHuman: '',
+    medicalAidType: '', // Add this field
+    provider: '', // Add this field
+    plan: '', // Add this field
+    policyNumber: '', // Add this field
+    mainMember: '', // Add this field
+    networkHospital: '' // Add this field
   });
+  const [mapCenter, setMapCenter] = useState({
+    lat: -26.1305, // Default latitude
+    lng: 27.9737,  // Default longitude
+  });
+  const [isDPULDisabled, setIsDPULDisabled] = useState(true); // DPUL field disabled state
   const navigate = useNavigate();
+
   const generatePassengerID = async (lastName) => {
     const prefix = `P-${lastName.substring(0, 3).toUpperCase()}`;
     const passengersRef = collection(db, 'accountHolders');
@@ -44,7 +58,6 @@ const AddPassenger = ({ clientId }) => {
     const fullYear = parseInt(year, 10) > parseInt(currentYear, 10) ? `19${year}` : `20${year}`;
     return `${fullYear}-${month}-${day}`;
   };
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -54,9 +67,16 @@ const AddPassenger = ({ clientId }) => {
       const dateOfBirth = extractDateOfBirth(formData.idNumber);
       const clientRef = doc(db, 'accountHolders', clientId);
       await updateDoc(clientRef, {
-        passengers: arrayUnion({ ...formData, type: passengerType, passengerID, dateOfBirth })
+        passengers: arrayUnion({
+          ...formData,
+          type: passengerType,
+          passengerID,
+          dateOfBirth,
+          pickupAddressHuman: formData.pickupAddressHuman,
+        })
       });
       alert("Passenger added successfully!");
+      // Reset form
       setFormData({
         firstName: '',
         lastName: '',
@@ -74,8 +94,16 @@ const AddPassenger = ({ clientId }) => {
         schoolName: '',
         schoolAddress: '',
         pickupAddress: null,
+        pickupAddressHuman: '',
+        medicalAidType: '',
+        provider: '',
+        plan: '',
+        policyNumber: '',
+        mainMember: '',
+        networkHospital: ''
       });
       setPassengerType('');
+      setIsDPULDisabled(true); // Disable DPUL field
       formRef.current.focus(); // Set focus back to the top field
     } catch (error) {
       console.error("Error adding passenger:", error);
@@ -83,16 +111,33 @@ const AddPassenger = ({ clientId }) => {
     }
   };
 
-  const handleAddressSelect = (address) => {
-    console.log("Address selected:", address);
+  const handleAddressSelect = ({ lat, lng, address }) => {
+    setMapCenter({ lat, lng });
     setFormData((prevFormData) => ({
       ...prevFormData,
-      pickupAddress: address,
+      pickupAddress: { lat, lng },
+      pickupAddressHuman: address,
+    }));
+    setIsDPULDisabled(false);
+  };
+
+  const handleSchoolAddressChange = (address) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      schoolAddress: address,
     }));
   };
+
+  const handleSchoolNameChange = (name) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      schoolName: name,
+    }));
+  };
+
   return (
     <Box sx={{ padding: 3, maxHeight: '80vh', overflowY: 'auto' }} ref={formRef}>
-      <Typography variant="h6" gutterBottom>Add Passenger</Typography>
+      <Typography variant="h6" gutterBottom style={{ color: 'black', fontWeight: 'bold' }}>Passenger Details</Typography>
       <FormControl fullWidth margin="normal">
         <InputLabel id="passenger-type-label">Passenger Type</InputLabel>
         <Select
@@ -175,12 +220,17 @@ const AddPassenger = ({ clientId }) => {
             margin="normal"
           />
           <TextField
-            label="Date of Birth"
-            name="dateOfBirth"
-            value={formData.dateOfBirth}
+            label="ID Number"
+            name="idNumber"
+            value={formData.idNumber}
             onChange={handleChange}
             fullWidth
             margin="normal"
+          />
+          <SchoolAddressAutocomplete 
+            address={formData.schoolAddress} 
+            onAddressChange={handleSchoolAddressChange} 
+            onNameChange={handleSchoolNameChange} 
           />
           <TextField
             label="School Name"
@@ -190,31 +240,86 @@ const AddPassenger = ({ clientId }) => {
             fullWidth
             margin="normal"
           />
-          <TextField
-            label="School Address"
-            name="schoolAddress"
-            value={formData.schoolAddress}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-          />
         </>
       )}
-      <Typography variant="h6" gutterBottom>Pick-up Address</Typography>
-      <MapPicker onSelect={handleAddressSelect} />
+      <Typography variant="h6" gutterBottom style={{ color: 'black', fontWeight: 'bold' }}>Default Pick-Up Location</Typography>
       <TextField
-        label="Additional Comments/Specific Requests"
-        name="comments"
-        value={formData.comments}
-        onChange={handleChange}
+        label="Default Pick-Up Location"
+        name="pickupAddressHuman"
+        value={formData.pickupAddressHuman}
+        onChange={(e) => setFormData({ ...formData, pickupAddressHuman: e.target.value })}
         fullWidth
         margin="normal"
+        disabled={isDPULDisabled} // Disable the field initially
+      />
+      <Typography variant="body2" gutterBottom style={{ color: 'black' }}>
+        If this address is incorrect or you wish to change the default pick-up location, please search for the new address below.
+      </Typography>
+      <MapPicker center={mapCenter} onSelect={handleAddressSelect} zoom={17} /> {/* Adjust zoom level as needed */}
+      <Typography variant="body2" gutterBottom style={{ color: 'black' }}>&nbsp;</Typography>
+      <Typography variant="h6" gutterBottom style={{ color: 'black', fontWeight: 'bold' }}>Medical &amp; Emergency Information</Typography>
+      <FormControl component="fieldset">
+        <FormLabel component="legend">Medical Aid</FormLabel>
+        <RadioGroup
+          aria-label="medicalAid"
+          name="medicalAidType"
+          value={formData.medicalAidType}
+          onChange={(e) => setFormData({ ...formData, medicalAidType: e.target.value })}
+        >
+          <FormControlLabel value="State" control={<Radio />} label="State" style={{ color: 'black' }} />
+          <FormControlLabel value="Private" control={<Radio />} label="Private" style={{ color: 'black' }} />
+        </RadioGroup>
+      </FormControl>
+      <TextField
+        label="Provider"
+        name="provider"
+        value={formData.provider}
+        onChange={(e) => setFormData({ ...formData, provider: e.target.value })}
+        fullWidth
+        margin="normal"
+        disabled={formData.medicalAidType === 'State'}
+      />
+      <TextField
+        label="Plan"
+        name="plan"
+        value={formData.plan}
+        onChange={(e) => setFormData({ ...formData, plan: e.target.value })}
+        fullWidth
+        margin="normal"
+        disabled={formData.medicalAidType === 'State'}
+      />
+      <TextField
+        label="Policy Number"
+        name="policyNumber"
+        value={formData.policyNumber}
+        onChange={(e) => setFormData({ ...formData, policyNumber: e.target.value })}
+        fullWidth
+        margin="normal"
+        disabled={formData.medicalAidType === 'State'}
+      />
+      <TextField
+        label="Main Member"
+        name="mainMember"
+        value={formData.mainMember}
+        onChange={(e) => setFormData({ ...formData, mainMember: e.target.value })}
+        fullWidth
+        margin="normal"
+        disabled={formData.medicalAidType === 'State'}
+      />
+      <TextField
+        label="Network Hospital (Name)"
+        name="networkHospital"
+        value={formData.networkHospital}
+        onChange={(e) => setFormData({ ...formData, networkHospital: e.target.value })}
+        fullWidth
+        margin="normal"
+        disabled={formData.medicalAidType === 'State'}
       />
       <TextField
         label="Medical Conditions"
         name="medicalConditions"
         value={formData.medicalConditions}
-        onChange={handleChange}
+        onChange={(e) => setFormData({ ...formData, medicalConditions: e.target.value })}
         fullWidth
         margin="normal"
       />
@@ -222,7 +327,7 @@ const AddPassenger = ({ clientId }) => {
         label="Mobility Assistance Required"
         name="mobilityAssistance"
         value={formData.mobilityAssistance}
-        onChange={handleChange}
+        onChange={(e) => setFormData({ ...formData, mobilityAssistance: e.target.value })}
         fullWidth
         margin="normal"
       />
@@ -230,17 +335,19 @@ const AddPassenger = ({ clientId }) => {
         label="Allergies or Special Dietary Restrictions"
         name="dietaryRestrictions"
         value={formData.dietaryRestrictions}
-        onChange={handleChange}
+        onChange={(e) => setFormData({ ...formData, dietaryRestrictions: e.target.value })}
         fullWidth
         margin="normal"
       />
       <TextField
-        label="Other Relevant Information"
+        label="Notes"
         name="otherInfo"
         value={formData.otherInfo}
-        onChange={handleChange}
+        onChange={(e) => setFormData({ ...formData, otherInfo: e.target.value })}
         fullWidth
         margin="normal"
+        multiline
+        rows={4} // Make it a textarea
       />
       <Button variant="contained" color="primary" onClick={handleSave} sx={{ mt: 2 }}>Save</Button>
     </Box>

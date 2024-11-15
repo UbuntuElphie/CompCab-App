@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { TextField, Box, CircularProgress } from '@mui/material';
 
-const MapPicker = ({ onSelect }) => {
+const MapPicker = ({ center, onSelect, zoom }) => {
   const mapRef = useRef(null);
   const autocompleteRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -14,8 +14,8 @@ const MapPicker = ({ onSelect }) => {
       try {
         if (mapRef.current && !mapInstanceRef.current) { // Prevent multiple map instances
           const map = new window.google.maps.Map(mapRef.current, {
-            center: { lat: -26.1305, lng: 27.9737 }, // Default location: Cresta Shopping Centre
-            zoom: 14,
+            center: center || { lat: -26.1305, lng: 27.9737 }, // Use provided center or default location
+            zoom: zoom || 14, // Use the provided zoom level or default to 14
             mapId: '961a989e9ee33e34' // Your actual Map ID
           });
 
@@ -24,32 +24,48 @@ const MapPicker = ({ onSelect }) => {
           const { AdvancedMarkerElement } = await google.maps.importLibrary('marker');
           const marker = new AdvancedMarkerElement({
             map: map,
-            position: new window.google.maps.LatLng(-26.1305, 27.9737),
+            position: new window.google.maps.LatLng(center.lat, center.lng),
             draggable: true,
           });
           markerRef.current = marker;
 
-          window.google.maps.event.addListener(marker, 'dragend', (event) => {
+          const geocodeLatLng = (geocoder, lat, lng) => {
+            return new Promise((resolve, reject) => {
+              geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+                if (status === 'OK' && results[0]) {
+                  resolve(results[0].formatted_address);
+                } else {
+                  reject(status);
+                }
+              });
+            });
+          };
+
+          const updateAddressField = async (lat, lng) => {
+            const geocoder = new window.google.maps.Geocoder();
+            try {
+              const address = await geocodeLatLng(geocoder, lat, lng);
+              if (autocompleteRef.current) {
+                autocompleteRef.current.value = address;
+              }
+              onSelect({ lat, lng, address });
+            } catch (error) {
+              console.error('Geocode error:', error);
+            }
+          };
+
+          window.google.maps.event.addListener(marker, 'dragend', async (event) => {
             const lat = event.latLng.lat();
             const lng = event.latLng.lng();
-            onSelect({ lat, lng });
+            marker.position = new window.google.maps.LatLng(lat, lng);
+            updateAddressField(lat, lng);
           });
 
           window.google.maps.event.addListener(map, 'click', async (event) => {
             const lat = event.latLng.lat();
             const lng = event.latLng.lng();
             marker.position = new window.google.maps.LatLng(lat, lng);
-
-            const geocoder = new window.google.maps.Geocoder();
-            geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-              if (status === 'OK' && results[0]) {
-                const address = results[0].formatted_address;
-                autocompleteRef.current.value = address;
-                onSelect({ lat, lng });
-              } else {
-                console.error('Geocoder failed due to: ' + status);
-              }
-            });
+            updateAddressField(lat, lng);
           });
 
           const autocomplete = new window.google.maps.places.Autocomplete(autocompleteRef.current, {
@@ -57,20 +73,17 @@ const MapPicker = ({ onSelect }) => {
             fields: ['geometry', 'formatted_address']
           });
 
-          console.log("Autocomplete initialized:", autocomplete);
-
           autocomplete.addListener('place_changed', () => {
             const place = autocomplete.getPlace();
-            console.log("Place changed:", place);
             if (place.geometry) {
               const location = place.geometry.location;
               mapInstanceRef.current.setCenter(location);
               mapInstanceRef.current.setZoom(17); // Adjust zoom level for better street view
               marker.position = location; // Update marker position
-              onSelect({ lat: location.lat(), lng: location.lng() });
-              console.log("Place selected:", place);
-            } else {
-              console.log("No geometry found for place.");
+              if (autocompleteRef.current) {
+                autocompleteRef.current.value = place.formatted_address;
+              }
+              onSelect({ lat: location.lat(), lng: location.lng(), address: place.formatted_address });
             }
           });
 
@@ -83,35 +96,8 @@ const MapPicker = ({ onSelect }) => {
       }
     };
 
-    const initAutocompleteService = () => {
-      const service = new window.google.maps.places.AutocompleteService();
-      console.log("Autocomplete service initialized:", service);
-
-      const handleChange = () => {
-        const input = autocompleteRef.current.value;
-        console.log("Keystroke detected:", input);
-
-        if (input.length > 0) {
-          service.getPlacePredictions({ input }, (predictions, status) => {
-            if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-              console.log("Predictions:", predictions);
-            } else {
-              console.error("Error fetching predictions:", status);
-            }
-          });
-        }
-      };
-
-      if (autocompleteRef.current) {
-        autocompleteRef.current.addEventListener('input', handleChange);
-        autocompleteRef.current.style.position = 'relative';
-        autocompleteRef.current.style.zIndex = 2147483647; // Maximum z-index value
-      }
-    };
-
     if (window.google && window.google.maps && window.google.maps.places) {
       initMap();
-      initAutocompleteService();
     } else {
       const existingScript = document.getElementById('googleMaps');
 
@@ -123,26 +109,32 @@ const MapPicker = ({ onSelect }) => {
         script.defer = true;
         script.onload = () => {
           initMap();
-          initAutocompleteService();
         };
         document.head.appendChild(script);
       } else {
         existingScript.onload = () => {
           initMap();
-          initAutocompleteService();
         };
       }
     }
 
     window.initMap = initMap;
-    window.initAutocompleteService = initAutocompleteService;
-  }, [onSelect]);
+  }, [onSelect, center, zoom]);
+
+  useEffect(() => {
+    if (mapInstanceRef.current && center) {
+      mapInstanceRef.current.setCenter(center);
+      if (markerRef.current) {
+        markerRef.current.position = new window.google.maps.LatLng(center.lat, center.lng);
+      }
+    }
+  }, [center]);
 
   return (
     <Box>
       <TextField
         fullWidth
-        label="Enter address"
+        label="Enter Address"
         inputRef={autocompleteRef}
         margin="normal"
         variant="outlined"

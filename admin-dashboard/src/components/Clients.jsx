@@ -51,11 +51,7 @@ const Clients = () => {
   };
 
   const handleEditPassengerOpen = (client, passenger) => {
-    if (passenger && passenger.passengerID) {
-      navigate(`/clients/${client.id}/edit-passenger/${passenger.passengerID}`);
-    } else {
-      console.error("Passenger ID is undefined");
-    }
+    navigate(`/clients/${client.id}/edit-passenger/${passenger.passengerID}`);
   };
 
   const handleDeactivate = async (clientId, passengerIndex) => {
