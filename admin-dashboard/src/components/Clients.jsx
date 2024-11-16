@@ -89,7 +89,7 @@ const Clients = () => {
           <IconButton onClick={handleBack}>
             <Typography>Back</Typography>
           </IconButton>
-          <EditClient clientId={selectedClient.id} />
+          <EditClient clientId={selectedClient.id} onSave={handleBack} />
         </Box>
       ) : showAddPassenger && selectedClient ? (
         <Box>

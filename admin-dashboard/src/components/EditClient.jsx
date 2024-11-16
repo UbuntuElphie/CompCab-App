@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Box, Button, TextField, Typography } from '@mui/material';
 import { db } from '../firebaseConfig';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
 
-const EditClient = ({ clientId, onClose }) => {
+const EditClient = ({ clientId }) => {
   const [client, setClient] = useState(null);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [address, setAddress] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchClient = async () => {
@@ -30,15 +32,21 @@ const EditClient = ({ clientId, onClose }) => {
   }, [clientId]);
 
   const handleSave = async () => {
-    const clientRef = doc(db, 'accountHolders', clientId);
-    await updateDoc(clientRef, {
-      firstName,
-      lastName,
-      email,
-      phoneNumber,
-      address,
-    });
-    onClose();
+    try {
+      console.log('handleSave called');
+      const clientRef = doc(db, 'accountHolders', clientId);
+      await updateDoc(clientRef, {
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        address,
+      });
+      console.log('Document updated');
+      navigate('/clients'); // Navigate back to the client list
+    } catch (error) {
+      console.error('Error updating document:', error);
+    }
   };
 
   if (!client) {

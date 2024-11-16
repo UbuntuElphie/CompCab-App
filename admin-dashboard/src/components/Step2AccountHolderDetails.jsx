@@ -90,12 +90,12 @@ const Step2AccountHolderDetails = ({ onNext, data, termsAccepted }) => {
           sx={{ '& .MuiInputLabel-root': { color: 'black' } }}
         />
         <TextField
-          label="Contact Number"
-          name="contact"
+          label="Phone Number"
+          name="phoneNumber"
           variant="outlined"
           fullWidth
           margin="normal"
-          value={accountHolderData.contact}
+          value={accountHolderData.phoneNumber}
           onChange={handleChange}
           sx={{ '& .MuiInputLabel-root': { color: 'black' } }}
         />
