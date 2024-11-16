@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { TextField, Box, CircularProgress } from '@mui/material';
 
-const MapPicker = ({ center, onSelect, zoom }) => {
+const MapPicker = ({ center = { lat: -26.1305, lng: 27.9737 }, onSelect, zoom = 14 }) => {
   const mapRef = useRef(null);
   const autocompleteRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -12,18 +12,18 @@ const MapPicker = ({ center, onSelect, zoom }) => {
   useEffect(() => {
     const initMap = async () => {
       try {
-        if (mapRef.current && !mapInstanceRef.current) { // Prevent multiple map instances
+        if (mapRef.current && !mapInstanceRef.current) {
           const map = new window.google.maps.Map(mapRef.current, {
-            center: center || { lat: -26.1305, lng: 27.9737 }, // Use provided center or default location
-            zoom: zoom || 14, // Use the provided zoom level or default to 14
-            mapId: '961a989e9ee33e34' // Your actual Map ID
+            center,
+            zoom,
+            mapId: '961a989e9ee33e34', // Your actual Map ID
           });
 
           mapInstanceRef.current = map;
 
           const { AdvancedMarkerElement } = await google.maps.importLibrary('marker');
           const marker = new AdvancedMarkerElement({
-            map: map,
+            map,
             position: new window.google.maps.LatLng(center.lat, center.lng),
             draggable: true,
           });
@@ -54,14 +54,14 @@ const MapPicker = ({ center, onSelect, zoom }) => {
             }
           };
 
-          window.google.maps.event.addListener(marker, 'dragend', async (event) => {
+          marker.addListener('dragend', async (event) => {
             const lat = event.latLng.lat();
             const lng = event.latLng.lng();
             marker.position = new window.google.maps.LatLng(lat, lng);
             updateAddressField(lat, lng);
           });
 
-          window.google.maps.event.addListener(map, 'click', async (event) => {
+          map.addListener('click', async (event) => {
             const lat = event.latLng.lat();
             const lng = event.latLng.lng();
             marker.position = new window.google.maps.LatLng(lat, lng);
@@ -70,16 +70,16 @@ const MapPicker = ({ center, onSelect, zoom }) => {
 
           const autocomplete = new window.google.maps.places.Autocomplete(autocompleteRef.current, {
             types: ['geocode'],
-            fields: ['geometry', 'formatted_address']
+            fields: ['geometry', 'formatted_address'],
           });
 
           autocomplete.addListener('place_changed', () => {
             const place = autocomplete.getPlace();
             if (place.geometry) {
               const location = place.geometry.location;
-              mapInstanceRef.current.setCenter(location);
-              mapInstanceRef.current.setZoom(17); // Adjust zoom level for better street view
-              marker.position = location; // Update marker position
+              map.setCenter(location);
+              map.setZoom(17); // Adjust zoom level for better street view
+              marker.position = new window.google.maps.LatLng(location.lat(), location.lng()); // Update marker position
               if (autocompleteRef.current) {
                 autocompleteRef.current.value = place.formatted_address;
               }

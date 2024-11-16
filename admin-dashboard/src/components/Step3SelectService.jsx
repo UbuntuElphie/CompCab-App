@@ -58,11 +58,11 @@ const Step3SelectService = ({ onNext, onPrev, data, recordId }) => {
             style={{ color: 'black' }}
           />
         </FormGroup>
-        <Button variant="contained" color="primary" type="submit" sx={{ mt: 2, mr: 2 }}>
-          Next
-        </Button>
-        <Button variant="contained" color="secondary" onClick={onPrev} sx={{ mt: 2 }}>
+        <Button variant="contained" color="secondary" onClick={onPrev} sx={{ mt: 2, mr: 2 }}>
           Back
+        </Button>
+        <Button variant="contained" color="primary" type="submit" sx={{ mt: 2 }}>
+          Next
         </Button>
       </form>
     </Box>
