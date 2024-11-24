@@ -9,6 +9,8 @@ const MapPicker = ({ center = { lat: -26.1305, lng: 27.9737 }, onSelect, zoom = 
   const [mapLoaded, setMapLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
+
   useEffect(() => {
     const initMap = async () => {
       try {
@@ -103,7 +105,7 @@ const MapPicker = ({ center = { lat: -26.1305, lng: 27.9737 }, onSelect, zoom = 
 
       if (!existingScript) {
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBb1svKojclkDN4T7qVIz8_VrD_CKv6Lyc&libraries=places&callback=initMap`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`;
         script.id = 'googleMaps';
         script.async = true;
         script.defer = true;

@@ -11,41 +11,35 @@ const Step4BillingPayment = ({ onNext, onPrev, data, recordId }) => {
     preferredPaymentMethod: data.preferredPaymentMethod || ''
   });
 
+  const [mapCenter, setMapCenter] = useState({ lat: -26.1305, lng: 27.9737 }); // Default map center
+  const [mapZoom, setMapZoom] = useState(14); // Default zoom level
   const [sameAsPhysical, setSameAsPhysical] = useState(false);
 
   useEffect(() => {
     if (sameAsPhysical) {
-      // Clear the field before updating
+      setBillingData((prevData) => ({
+        ...prevData,
+        billingAddress: data.address // Update billing address with physical address
+      }));
+    } else {
       setBillingData((prevData) => ({
         ...prevData,
         billingAddress: ''
       }));
-      // Ensure the field is updated correctly
-      setTimeout(() => {
-        setBillingData((prevData) => ({
-          ...prevData,
-          billingAddress: data.address
-        }));
-      }, 0);
     }
   }, [sameAsPhysical, data.address]);
 
   const handleCheckboxChange = (e) => {
     setSameAsPhysical(e.target.checked);
-    if (!e.target.checked) {
-      // Clear the billingAddress field
-      setBillingData((prevData) => ({
-        ...prevData,
-        billingAddress: ''
-      }));
-    }
   };
 
-  const handleAddressChange = (address) => {
+  const handleAddressChange = ({ lat, lng, address }) => {
     setBillingData((prevData) => ({
       ...prevData,
       billingAddress: address
     }));
+    setMapCenter({ lat, lng });
+    setMapZoom(14);
   };
 
   const handleChange = (e) => {
@@ -88,21 +82,22 @@ const Step4BillingPayment = ({ onNext, onPrev, data, recordId }) => {
             fullWidth
             margin="normal"
             value={billingData.billingAddress}
+            onChange={handleChange}
             sx={{ '& .MuiInputLabel-root': { color: 'black' } }}
-            disabled
+            disabled // Making the Billing Address field uneditable
             required
           />
           {!sameAsPhysical && (
             <Box sx={{ width: '100%', boxSizing: 'border-box', display: 'flex', justifyContent: 'center' }}>
               <Box sx={{ width: '100%', maxWidth: '100%' }}>
-                <MapPicker onSelect={({ address }) => handleAddressChange(address)} zoom={14} />
+                <MapPicker center={mapCenter} onSelect={handleAddressChange} zoom={mapZoom} />
               </Box>
             </Box>
           )}
 
           <Typography variant="h6" gutterBottom style={{ color: 'black', marginTop: '16px' }}>Preferred Payment Method</Typography>
           <RadioGroup name="preferredPaymentMethod" value={billingData.preferredPaymentMethod} onChange={handleChange}>
-            <FormControlLabel value="creditCard" control={<Radio />} label="Credit/Debit Card" style={{ color: 'black' }}/>
+            <FormControlLabel value="creditCard" control={<Radio />} label="Credit/Debit Card" style={{ color: 'black' }} />
             <FormControlLabel value="bankTransfer" control={<Radio />} label="Bank Transfer/EFT" style={{ color: 'black' }} />
             <FormControlLabel value="cash" control={<Radio />} label="Cash" style={{ color: 'black' }} />
           </RadioGroup>

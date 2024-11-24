@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { Button, Box, FormControlLabel, Checkbox, FormGroup } from '@mui/material';
 import TermsOfServicePage from './TermsOfServicePage';
-import { useAdmin } from '../AdminContext'; // Ensure the path is correct
 
-const Step1TermsOfService = ({ onNext, data }) => {
-  const { isAdmin } = useAdmin();
-  const [termsAccepted, setTermsAccepted] = useState(data || false);
+const Step1TermsOfService = ({ onNext }) => {
+  const [termsAccepted, setTermsAccepted] = useState(false); // Ensure initial state is false
 
   const handleChange = (e) => {
     setTermsAccepted(e.target.checked);
@@ -13,15 +11,7 @@ const Step1TermsOfService = ({ onNext, data }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (termsAccepted || isAdmin) {
-      onNext({ termsAccepted });
-    } else {
-      alert('You must accept the terms of service to proceed.');
-    }
-  };
-
-  const handleAdminSkip = () => {
-    onNext({ termsAccepted: false }); // Set termsAccepted to false when skipped
+    onNext({ termsAccepted });
   };
 
   return (
@@ -46,20 +36,10 @@ const Step1TermsOfService = ({ onNext, data }) => {
           color="primary"
           type="submit"
           sx={{ mt: 2 }}
-          disabled={!termsAccepted && !isAdmin}
+          disabled={!termsAccepted} // Ensure button is disabled based on checkbox state
         >
           Next
         </Button>
-        {isAdmin && (
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={handleAdminSkip}
-            sx={{ mt: 2, ml: 2 }}
-          >
-            Skip for Now
-          </Button>
-        )}
       </form>
     </Box>
   );

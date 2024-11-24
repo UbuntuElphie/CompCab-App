@@ -7,6 +7,7 @@ import MapPicker from './MapPicker'; // Ensure the correct path for MapPicker
 const Step2AccountHolderDetails = ({ onNext, data, termsAccepted = false }) => {
   const [accountHolderData, setAccountHolderData] = useState({
     firstName: data.firstName || '',
+    preferredName: data.preferredName || '', // Added Preferred Name field
     lastName: data.lastName || '',
     idNumber: data.idNumber || '',
     email: data.email || '',
@@ -70,6 +71,16 @@ const Step2AccountHolderDetails = ({ onNext, data, termsAccepted = false }) => {
           value={accountHolderData.firstName}
           onChange={handleChange}
           required
+          sx={{ '& .MuiInputLabel-root': { color: 'black' } }}
+        />
+        <TextField
+          label="Preferred Name"
+          name="preferredName"
+          variant="outlined"
+          fullWidth
+          margin="normal"
+          value={accountHolderData.preferredName}
+          onChange={handleChange}
           sx={{ '& .MuiInputLabel-root': { color: 'black' } }}
         />
         <TextField
