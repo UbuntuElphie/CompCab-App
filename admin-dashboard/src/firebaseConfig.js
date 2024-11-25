@@ -18,5 +18,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const db = getFirestore(app);
+console.log('Firebase API Key:', process.env.REACT_APP_FIREBASE_API_KEY);
 
 export { db };
